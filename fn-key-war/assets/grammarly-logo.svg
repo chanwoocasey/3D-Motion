@@ -1,0 +1,11 @@
+<!-- PLACEHOLDER: replace with the official Grammarly logo (keep this filename). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3FDDB5"/>
+      <stop offset="1" stop-color="#0FA987"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#g)"/>
+  <path d="M136.8 63.2 A52 52 0 1 0 152 100 L112 100" fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

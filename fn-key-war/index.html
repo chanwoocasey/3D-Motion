@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fn Key War</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=block" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+  body { font-family: 'Inter', -apple-system, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif; color: #fff; }
+
+  #viewport { position: absolute; inset: 0 0 72px 0; display: flex; align-items: center; justify-content: center; }
+  #stage { position: relative; flex: none; width: 1920px; height: 1080px; overflow: hidden; background: #06070a; }
+  body.render #viewport { inset: 0; display: block; }
+  body.render #stage { transform: none !important; }
+  body.render #controls { display: none; }
+
+  .fill { position: absolute; inset: 0; pointer-events: none; }
+  #bg { background: radial-gradient(ellipse 72% 72% at 50% 50%, #161922 0%, #0a0b0f 55%, #050608 100%); }
+  #dots {
+    background-image: radial-gradient(rgba(255,255,255,.9) 1.3px, transparent 1.8px);
+    background-size: 48px 48px; background-position: 0 12px; opacity: .05;
+    -webkit-mask-image: radial-gradient(ellipse 55% 60% at 50% 50%, #000 0%, transparent 100%);
+            mask-image: radial-gradient(ellipse 55% 60% at 50% 50%, #000 0%, transparent 100%);
+  }
+  #ambient { position: absolute; width: 1500px; height: 1500px; border-radius: 50%; }
+
+  /* ---------- keyboard (scene 1) ---------- */
+  #kbRoot { perspective: 2200px; perspective-origin: 960px 540px; }
+  #kbPlane { position: absolute; left: 0; top: 0; transform-origin: 0 0; transform-style: preserve-3d; }
+  .plate { position: absolute; border-radius: 30px; background: linear-gradient(180deg, #1b1d22, #111216);
+           box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+  .key { position: absolute; transform-style: preserve-3d; --s: 1; }
+  .kl  { position: absolute; inset: 0; border-radius: 10px; }
+
+  /* keycap top face — sizes are multiplied by --s so the hero key can reuse it at 2.5x */
+  .kt { position: absolute; inset: 0; overflow: hidden; border-radius: calc(10px * var(--s));
+        background: linear-gradient(180deg, #2c2e34 0%, #1e2025 100%);
+        box-shadow: inset 0 calc(1px * var(--s)) 0 rgba(255,255,255,.08), inset 0 calc(-2px * var(--s)) 0 rgba(0,0,0,.28); }
+  .lbl { position: absolute; color: #cfd2d9; line-height: 1; white-space: nowrap; font-weight: 500; }
+  .lbl.c   { inset: 0; display: flex; align-items: center; justify-content: center; font-size: calc(30px * var(--s)); }
+  .lbl.n   { inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+             gap: calc(9px * var(--s)); font-size: calc(19px * var(--s)); }
+  .lbl.n i { font-style: normal; }
+  .lbl.tr  { top: calc(14px * var(--s)); right: calc(15px * var(--s)); }
+  .lbl.tl  { top: calc(14px * var(--s)); left: calc(15px * var(--s)); }
+  .lbl.br  { bottom: calc(14px * var(--s)); right: calc(15px * var(--s)); }
+  .lbl.bl  { bottom: calc(14px * var(--s)); left: calc(15px * var(--s)); }
+  .lbl.sym { font-size: calc(21px * var(--s)); }
+  .lbl.word{ font-size: calc(15px * var(--s)); }
+  .lbl.fn  { font-size: calc(23px * var(--s)); }
+  .globe   { width: calc(25px * var(--s)); height: calc(25px * var(--s)); }
+
+  /* ---------- hero key ---------- */
+  #heroRoot { perspective: 1700px; }
+  #hero { position: absolute; width: 300px; height: 300px; transform-style: preserve-3d; --s: 2.5; }
+  #hero .hl { position: absolute; inset: 0; }
+  #hero .face { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  #hero .brand { position: absolute; inset: 0; }
+  #hero .mark { position: absolute; left: 75px; top: 75px; width: 150px; height: 150px; }
+  #hero .gloss { position: absolute; inset: 0;
+                 background: linear-gradient(155deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,0) 40%),
+                             linear-gradient(0deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,0) 30%); }
+  #hero .sheen { position: absolute; top: -30%; height: 160%; width: 34%; left: 0;
+                 background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.32), rgba(255,255,255,0)); }
+  #hero .fnw { color: #fff; }
+  #heroShadow { position: absolute; width: 300px; height: 300px; border-radius: 60px; background: #000; }
+
+  /* ---------- fx ---------- */
+  .streak { position: absolute; height: 6px; border-radius: 6px; }
+  .ring { position: absolute; width: 300px; height: 300px; border-radius: 72px; border-style: solid; }
+  #waves { position: absolute; left: 0; top: 0; overflow: visible; }
+
+  /* ---------- badges ---------- */
+  .badge { position: absolute; top: 456px; width: 300px; display: flex; flex-direction: column; align-items: center; }
+  .badge .halo { position: absolute; top: -66px; width: 300px; height: 300px; border-radius: 50%; }
+  .badge img { position: relative; width: 168px; height: 168px; filter: drop-shadow(0 24px 40px rgba(0,0,0,.55)); }
+  .badge .name { position: relative; margin-top: 26px; font-size: 36px; font-weight: 600; letter-spacing: -0.5px; color: #eef0f4; }
+
+  /* ---------- end card ---------- */
+  #pill { position: absolute; left: 850px; top: 623px; width: 220px; height: 64px; border-radius: 32px;
+          background: rgba(14,15,20,.94); box-shadow: inset 0 0 0 1px rgba(255,255,255,.10), 0 18px 50px rgba(0,0,0,.55);
+          display: flex; align-items: center; justify-content: center; gap: 6px; }
+  #pill i { display: block; width: 5px; border-radius: 3px; background: #fff; }
+  #title { position: absolute; left: 0; right: 0; top: 742px; text-align: center; }
+  #title h1 { font-size: 78px; font-weight: 700; letter-spacing: -2px; line-height: 1.1; }
+  #title h1 .w { display: inline-block; margin: 0 .13em; }
+  #title h1 .kbd { display: inline-block; padding: 0 .28em; border-radius: .2em; font-weight: 600;
+                   background: linear-gradient(180deg, #2c2e34, #1c1d22);
+                   box-shadow: inset 0 2px 0 rgba(255,255,255,.1), 0 6px 0 #0b0c0e, 0 10px 24px rgba(0,0,0,.5); }
+  #title p { margin-top: 18px; font-size: 32px; font-weight: 500; color: #9aa1b0; letter-spacing: -0.3px; }
+
+  #vignette { background: radial-gradient(ellipse 75% 75% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.6) 100%); }
+  #grain { position: absolute; left: -100px; top: -100px; width: 2120px; height: 1280px; opacity: .10; mix-blend-mode: overlay; }
+  #fade { background: #000; }
+
+  /* ---------- preview controls (hidden when rendering) ---------- */
+  #controls { position: fixed; left: 0; right: 0; bottom: 0; height: 72px; display: flex; align-items: center; gap: 16px;
+              padding: 0 24px; background: #111; border-top: 1px solid #222; font: 500 14px/1 'Inter', sans-serif; color: #bbb; }
+  #controls button { width: 84px; height: 36px; border: 0; border-radius: 8px; background: #2a2a2e; color: #fff; font: inherit; cursor: pointer; }
+  #controls input { flex: 1; accent-color: #8b6cff; }
+  #controls span { width: 120px; text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <div id="bg" class="fill"></div>
+    <div id="dots" class="fill"></div>
+    <div id="ambient"></div>
+    <div id="kbRoot" class="fill"><div id="kbPlane"></div></div>
+    <div id="streaks" class="fill"></div>
+    <svg id="waves" width="1920" height="1080">
+      <defs>
+        <filter id="glow" x="-20%" y="-50%" width="140%" height="200%">
+          <feGaussianBlur stdDeviation="7" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <g filter="url(#glow)" fill="none" stroke-linecap="round"></g>
+    </svg>
+    <div id="rings" class="fill"></div>
+    <div id="heroShadow"></div>
+    <div id="heroRoot" class="fill"><div id="hero"></div></div>
+    <div class="badge" id="badgeA"><div class="halo"></div><img alt=""><div class="name"></div></div>
+    <div class="badge" id="badgeB"><div class="halo"></div><img alt=""><div class="name"></div></div>
+    <div id="pill"></div>
+    <div id="title"><h1></h1><p></p></div>
+    <div id="vignette" class="fill"></div>
+    <div id="grain"></div>
+    <div id="fade" class="fill"></div>
+  </div>
+</div>
+<div id="controls">
+  <button id="play">Pause</button>
+  <input id="scrub" type="range" min="0" step="0.001">
+  <span id="clock">0.00s</span>
+</div>
+
+<script>
+/* =====================================================================
+   EDIT ME — names, colors, logos and copy.
+   Logos live in ./assets; drop in the official SVG/PNGs with the same
+   filenames (or change the paths here) and re-render.
+   ===================================================================== */
+const CONFIG = {
+  duration: 13,
+  a: { name: 'Grammarly',  color: '#15C39A', logo: 'assets/grammarly-logo.svg',  mark: 'assets/grammarly-mark.svg' },
+  b: { name: 'Wispr Flow', color: '#7B61FF', logo: 'assets/wispr-flow-logo.svg', mark: 'assets/wispr-flow-mark.svg' },
+  title: 'The battle for the fn key',   // '' hides the title
+  subtitle: '',                         // optional second line
+  dictationPill: true,                  // little "hold fn to talk" waveform on the end card
+};
+
+/* Beat sheet (seconds). Shift these to retime the whole piece. */
+const T = {
+  camA: 0.2, camB: 2.6,           // 3D keyboard, camera pushes in on fn
+  lift: 2.6, liftEnd: 3.5,        // fn key lifts out, keyboard falls away
+  badgeA: 3.1, badgeB: 3.25,      // contenders slide in
+  strikeA: 4.0,                   // Grammarly fires at the key...
+  fillA: 4.2, fillAEnd: 4.8,      // ...and it turns Grammarly
+  bursts: [5.95, 6.8, 7.6],       // Wispr Flow voice waves hit the key
+  counters: [6.42, 7.3],          // Grammarly pushes back
+  flipA: 8.15, flipB: 9.15,       // the key flips to Wispr Flow
+  outA: 9.5,                      // contenders leave, key rises
+  press: 10.35,                   // "hold fn" press + waveform
+  titleA: 10.75,
+};
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const bell = x => (x <= 0 || x >= 1) ? 0 : Math.sin(Math.PI * x);
+const E = {
+  inCubic:    x => x * x * x,
+  outCubic:   x => 1 - Math.pow(1 - x, 3),
+  outQuint:   x => 1 - Math.pow(1 - x, 5),
+  inOutCubic: x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
+  inOutQuart: x => x < .5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2,
+  inOutSine:  x => -(Math.cos(Math.PI * x) - 1) / 2,
+  outBack:   (x, s = 1.70158) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2),
+  inOutBack: (x, s = 1.70158) => {
+    const c = s * 1.525;
+    return x < .5 ? (Math.pow(2 * x, 2) * ((c + 1) * 2 * x - c)) / 2
+                  : (Math.pow(2 * x - 2, 2) * ((c + 1) * (2 * x - 2) + c) + 2) / 2;
+  },
+};
+// damped wobble that starts at 0, overshoots and settles back to 0
+const wobble = (x, freq = 11, damp = 6) => x <= 0 ? 0 : Math.exp(-damp * x) * Math.sin(freq * x);
+
+const hex = h => { h = h.replace('#', ''); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const mix = (c1, c2, t) => c1.map((v, i) => v + (c2[i] - v) * t);
+const rgba = (c, a = 1) => `rgba(${c.map(Math.round).join(',')},${a})`;
+const WHITE = [255, 255, 255], BLACK = [0, 0, 0], NEUTRAL = [130, 142, 168], KEY_SIDE = [12, 13, 16];
+const CA = hex(CONFIG.a.color), CB = hex(CONFIG.b.color);
+
+const GLOBE = `<svg class="globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+  <circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4.3" ry="10"/><path d="M2 12h20M3.4 7h17.2M3.4 17h17.2"/></svg>`;
+
+/* ---------------- keyboard ---------------- */
+const U = 120, GAP = 12, P = U + GAP, KD = 14, KL = 5;
+const K = (type, a = '', b = '', w = 1) => ({ type, a, b, w });
+const chars = s => [...s].map(c => K('c', c));
+const nums = pairs => pairs.map(([a, b]) => K('n', a, b));
+const ROWS = [
+  [...nums([['`', '~'], ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'], ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')'], ['-', '_'], ['=', '+']]), K('mr', 'delete', '', 1.5)],
+  [K('ml', 'tab', '⇥', 1.5), ...chars('QWERTYUIOP[]\\')],
+  [K('ml', 'caps lock', '•', 1.8), ...chars("ASDFGHJKL;'"), K('mr', 'return', '↩', 1.7)],
+  [K('ml', 'shift', '⇧', 2.3), ...chars('ZXCVBNM,./'), K('mr', 'shift', '⇧', 2.2)],
+  [K('fn'), K('mr', 'control', '⌃'), K('mr', 'option', '⌥'), K('mr', 'command', '⌘', 1.25), K('blank', '', '', 5),
+   K('ml', 'command', '⌘', 1.25), K('ml', 'option', '⌥'), ...chars('◀▼▶')],
+];
+const FN = { x: U / 2, y: 4 * P + U / 2 };   // fn key centre, keyboard space
+
+function labels(k) {
+  switch (k.type) {
+    case 'c':  return `<span class="lbl c">${k.a}</span>`;
+    case 'n':  return `<span class="lbl n"><i>${k.b}</i><i>${k.a}</i></span>`;
+    case 'mr': return `<span class="lbl tr sym">${k.b}</span><span class="lbl br word">${k.a}</span>`;
+    case 'ml': return `<span class="lbl tl sym">${k.b}</span><span class="lbl bl word">${k.a}</span>`;
+    case 'fn': return `<span class="lbl tr fn">fn</span><span class="lbl bl">${GLOBE}</span>`;
+    default:   return '';
+  }
+}
+
+const keys = [];
+function buildKeyboard() {
+  const plane = $('#kbPlane');
+  const wUnits = 14.5;
+  plane.style.width = `${wUnits * P - GAP}px`;
+  plane.style.height = `${5 * P - GAP}px`;
+  const plate = document.createElement('div');
+  plate.className = 'plate';
+  Object.assign(plate.style, { left: '-26px', top: '-26px', width: `${wUnits * P - GAP + 52}px`, height: `${5 * P - GAP + 52}px`,
+                               transform: `translateZ(${-KD - 1}px)` });
+  plane.appendChild(plate);
+
+  ROWS.forEach((row, r) => {
+    let x = 0;
+    row.forEach(k => {
+      const el = document.createElement('div');
+      el.className = 'key';
+      const w = k.w * P - GAP;
+      Object.assign(el.style, { left: `${x}px`, top: `${r * P}px`, width: `${w}px`, height: `${U}px` });
+      let html = '';
+      for (let i = 0; i < KL; i++) {
+        const shade = mix(KEY_SIDE, BLACK, i / KL * 0.6);
+        html += `<div class="kl" style="background:${rgba(shade)};transform:translateZ(${-(i + 1) * KD / KL}px)"></div>`;
+      }
+      html += `<div class="kt">${labels(k)}</div>`;
+      el.innerHTML = html;
+      plane.appendChild(el);
+      const cx = x + w / 2, cy = r * P + U / 2;
+      keys.push({ el, top: el.lastElementChild, isFn: k.type === 'fn', dist: Math.hypot(cx - FN.x, cy - FN.y) });
+      x += k.w * P;
+    });
+  });
+}
+
+/* ---------------- hero key ---------------- */
+const HS = 300, HD = 40, HN = 16;
+const hero = { layers: [] };
+function buildHero() {
+  const el = $('#hero');
+  let html = '';
+  for (let i = 0; i < HN; i++) html += `<div class="hl" style="transform:translateZ(${-(i + 1) * HD / HN}px)"></div>`;
+  html += `
+    <div class="face back" style="transform:translateZ(${-HD - 0.5}px) rotateY(180deg)">
+      <div class="brand" style="background:linear-gradient(145deg, ${rgba(mix(CB, WHITE, .28))} 0%, ${rgba(CB)} 55%, ${rgba(mix(CB, BLACK, .3))} 100%)"></div>
+      <img class="mark" src="${CONFIG.b.mark}" alt="">
+      <span class="lbl tr fn fnw">fn</span>
+      <div class="gloss"></div><div class="sheen"></div>
+    </div>
+    <div class="face front" style="transform:translateZ(0.5px)">
+      <div class="kt" style="border-radius:0"></div>
+      <div class="brand fillA" style="background:linear-gradient(145deg, ${rgba(mix(CA, WHITE, .28))} 0%, ${rgba(CA)} 55%, ${rgba(mix(CA, BLACK, .3))} 100%)"></div>
+      <div class="brand fillB" style="background:linear-gradient(145deg, ${rgba(mix(CB, WHITE, .28))} 0%, ${rgba(CB)} 55%, ${rgba(mix(CB, BLACK, .3))} 100%)"></div>
+      <img class="mark markA" src="${CONFIG.a.mark}" alt="">
+      <span class="lbl tr fn fnTxt">fn</span>
+      <span class="lbl bl globeWrap">${GLOBE}</span>
+      <div class="gloss"></div><div class="sheen"></div>
+    </div>`;
+  el.innerHTML = html;
+  hero.el = el;
+  hero.layers = [...el.querySelectorAll('.hl')];
+  hero.faces = [...el.querySelectorAll('.face')];
+  hero.fillA = el.querySelector('.fillA');
+  hero.fillB = el.querySelector('.fillB');
+  hero.markA = el.querySelector('.markA');
+  hero.fnTxt = el.querySelector('.fnTxt');
+  hero.globe = el.querySelector('.globeWrap');
+  hero.sheens = [...el.querySelectorAll('.sheen')];
+  hero.frontGloss = el.querySelector('.front .gloss');
+  el.style.transformOrigin = `50% 50% ${-HD / 2}px`;
+}
+
+/* ---------------- fx ---------------- */
+const RINGS = [
+  { t: T.fillA, c: CA, k: 1.0 },
+  { t: T.bursts[0] + 0.3, c: CB, k: 0.55 }, { t: T.counters[0] + 0.2, c: CA, k: 0.5 },
+  { t: T.bursts[1] + 0.3, c: CB, k: 0.65 }, { t: T.counters[1] + 0.2, c: CA, k: 0.5 },
+  { t: T.bursts[2] + 0.3, c: CB, k: 0.75 },
+  { t: T.flipB - 0.04, c: CB, k: 1.0 }, { t: T.flipB + 0.06, c: WHITE, k: 0.5 },
+];
+const STRIKES = [{ t: T.strikeA, k: 1.25 }, ...T.counters.map(t => ({ t, k: 0.85 }))];
+const STREAK_ROWS = [{ y: -46, d: 0.05, h: 4 }, { y: 0, d: 0, h: 8 }, { y: 46, d: 0.08, h: 4 }];
+const PILL_BARS = 15;
+const WAVE_LINES = [{ y: 0, amp: 30, k: 2 * Math.PI / 120, ph: 0, w: 6 }, { y: -10, amp: 20, k: 2 * Math.PI / 90, ph: 2, w: 3.5 },
+                    { y: 12, amp: 14, k: 2 * Math.PI / 150, ph: 4, w: 2.5 }];
+
+function buildFx() {
+  RINGS.forEach(r => { const d = document.createElement('div'); d.className = 'ring'; $('#rings').appendChild(d); r.el = d; });
+  STREAK_ROWS.forEach(s => { const d = document.createElement('div'); d.className = 'streak'; $('#streaks').appendChild(d); s.el = d; });
+  const g = $('#waves g');
+  WAVE_LINES.forEach(w => {
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('stroke', rgba(mix(CB, WHITE, .15)));
+    p.setAttribute('stroke-width', w.w);
+    g.appendChild(p); w.el = p;
+  });
+  for (let i = 0; i < PILL_BARS; i++) $('#pill').appendChild(document.createElement('i'));
+
+  // static film grain texture (seeded so every render is identical)
+  const cv = document.createElement('canvas'); cv.width = cv.height = 256;
+  const ctx = cv.getContext('2d'), img = ctx.createImageData(256, 256);
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < img.data.length; i += 4) { const v = rnd() * 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+  ctx.putImageData(img, 0, 0);
+  $('#grain').style.backgroundImage = `url(${cv.toDataURL()})`;
+}
+
+function buildText() {
+  for (const id of ['A', 'B']) {
+    const cfg = CONFIG[id.toLowerCase()];
+    const b = $(`#badge${id}`);
+    b.querySelector('img').src = cfg.logo;
+    b.querySelector('.name').textContent = cfg.name;
+    b.querySelector('.halo').style.background = `radial-gradient(circle, ${rgba(id === 'A' ? CA : CB, .55)} 0%, ${rgba(id === 'A' ? CA : CB, 0)} 65%)`;
+  }
+  $('#title h1').innerHTML = CONFIG.title.split(' ').filter(Boolean)
+    .map(w => `<span class="w${w.toLowerCase() === 'fn' ? ' kbd' : ''}">${w}</span>`).join('');
+  $('#title p').textContent = CONFIG.subtitle;
+}
+
+/* ---------------- timeline: everything is a pure function of t ---------------- */
+function intrusion(t) {
+  // radius (px) of the Wispr Flow colour eating into the Grammarly key during the tug-of-war
+  const segs = [
+    [T.bursts[0] + 0.28, T.bursts[0] + 0.5, 0, 100],
+    [T.counters[0] + 0.18, T.counters[0] + 0.34, 100, 35],
+    [T.bursts[1] + 0.28, T.bursts[1] + 0.52, 35, 175],
+    [T.counters[1] + 0.18, T.counters[1] + 0.32, 175, 110],
+    [T.bursts[2] + 0.28, T.bursts[2] + 0.55, 110, 240],
+  ];
+  let r = 0;
+  for (const [a, b, r0, r1] of segs) if (t >= a) r = lerp(r0, r1, E.outCubic(prog(t, a, b)));
+  return r;
+}
+
+function renderAt(t) {
+  /* ---- scene 1: camera on the keyboard ---- */
+  const cp = E.inOutQuart(prog(t, T.camA, T.camB));
+  const A = { fx: 600, fy: 260, S: 0.92, rx: 58, rz: 16 };
+  const B = { fx: FN.x, fy: FN.y, S: HS / U, rx: 0, rz: 0 };
+  const pull = E.inOutCubic(prog(t, T.lift, T.liftEnd));
+  const S = Math.exp(lerp(Math.log(A.S), Math.log(B.S), cp)) * lerp(1, 0.55, pull);
+  const drift = (1 - cp) * 4 * Math.sin(t * 0.8);
+  $('#kbPlane').style.transform =
+    `translate(960px,540px) scale(${S}) rotateX(${lerp(A.rx, B.rx, cp) + pull * 10}deg) rotateZ(${lerp(A.rz, B.rz, cp) + drift}deg) ` +
+    `translate(${-lerp(A.fx, B.fx, cp)}px,${-lerp(A.fy, B.fy, cp)}px)`;
+  const kbVis = 1 - E.inOutCubic(prog(t, T.lift + 0.1, T.liftEnd));
+  $('#kbRoot').style.opacity = kbVis;
+  $('#kbRoot').style.filter = pull > 0 ? `blur(${pull * 16}px)` : 'none';
+  $('#kbRoot').style.display = kbVis <= 0 ? 'none' : '';
+
+  // ripple of keys popping up, radiating out from fn, then fn glows
+  const fnGlow = E.inOutCubic(prog(t, 1.5, T.camB));
+  for (const k of keys) {
+    const x = (t - 0.25 - k.dist * 0.0009) / 0.55;
+    const z = 16 * bell(x);
+    k.el.style.transform = z > 0.01 ? `translateZ(${z}px)` : '';
+    if (k.isFn) {
+      k.el.style.visibility = t >= T.lift ? 'hidden' : '';
+      k.top.style.boxShadow = `inset 0 1px 0 rgba(255,255,255,.08), 0 0 0 ${1.5 * fnGlow}px rgba(255,255,255,${.75 * fnGlow}), 0 0 ${28 * fnGlow}px rgba(190,205,255,${.55 * fnGlow})`;
+      k.top.style.color = rgba(mix([207, 210, 217], WHITE, fnGlow));
+    }
+  }
+
+  /* ---- hero key ---- */
+  const heroOn = t >= T.lift;
+  $('#heroRoot').style.display = heroOn ? '' : 'none';
+  $('#heroShadow').style.display = heroOn ? '' : 'none';
+
+  const outP = E.inOutCubic(prog(t, T.outA + 0.2, T.outA + 1.1));
+  const cx = 960, cy = lerp(540, 420, outP);
+  const lift = E.inOutSine(prog(t, T.lift, T.liftEnd));
+  const idle = E.inOutSine(prog(t, T.lift + 0.5, T.lift + 1.4));
+  let z = 150 * lift + idle * 10 * Math.sin(t * 1.6);
+  let rx = -16 * bell(prog(t, T.lift, T.liftEnd + 0.2)) + idle * 10 * Math.sin(t * 0.9 + 1);
+  let ry = idle * 14 * Math.sin(t * 0.7 + 0.4);
+  let rz = idle * 1.5 * Math.sin(t * 0.6);
+  let sc = lerp(1, 0.86, outP) * (1 + 0.07 * wobble(t - T.fillA - 0.35, 14, 5));
+  let jx = 0, jy = 0;
+
+  // tug-of-war shake
+  if (t > T.bursts[0] && t < T.flipA + 0.2) {
+    let amp = 0.25 + 0.75 * prog(t, T.bursts[0], T.flipA);
+    for (const h of [...T.bursts.map(b => b + 0.3), ...T.counters.map(c => c + 0.2)]) if (t > h) amp += 1.6 * Math.exp(-9 * (t - h));
+    amp *= 1 - prog(t, T.flipA, T.flipA + 0.2);
+    jx = amp * 6 * (Math.sin(t * 41) + 0.6 * Math.sin(t * 67 + 2));
+    jy = amp * 3 * Math.sin(t * 53 + 1);
+    rz += amp * 1.8 * (Math.sin(t * 37 + 1) + 0.5 * Math.sin(t * 59));
+  }
+
+  // flip: squash down, wind up, spin 180° with overshoot, land
+  const ant = prog(t, T.flipA, T.flipA + 0.2);
+  const fp = prog(t, T.flipA + 0.15, T.flipB);
+  const dip = E.outCubic(ant) * (1 - E.inOutCubic(clamp(fp * 2.5)));
+  ry += 180 * E.inOutBack(fp, 1.3);
+  z += -50 * dip + 170 * bell(fp) - 10 * wobble(t - T.flipB, 12, 6);
+  rz += -8 * bell(fp);
+  sc *= (1 - 0.06 * dip) * (1 + 0.06 * wobble(t - T.flipB + 0.05, 14, 5));
+
+  // end card: press & hold fn
+  const press = E.outCubic(prog(t, T.press, T.press + 0.14)) - 0.35 * E.inOutSine(prog(t, T.press + 0.14, T.press + 0.5));
+  z -= 34 * press;
+
+  const r = lerp(25, 66, E.inOutCubic(prog(t, T.lift, T.lift + 0.7)));
+  hero.el.style.left = `${cx - HS / 2}px`;
+  hero.el.style.top = `${cy - HS / 2}px`;
+  $('#heroRoot').style.perspectiveOrigin = `${cx}px ${cy}px`;
+  hero.el.style.transform = `translate3d(${jx}px,${jy}px,${z}px) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale3d(${sc},${sc},${sc})`;
+
+  // side colour follows ownership: graphite -> Grammarly -> Wispr Flow
+  const ownA = E.inOutCubic(prog(t, T.fillA, T.fillAEnd));
+  const ownB = E.inOutCubic(prog(t, T.flipA + 0.5, T.flipA + 0.75));
+  const side = mix(mix([34, 36, 42], mix(CA, BLACK, .3), ownA), mix(CB, BLACK, .3), ownB);
+  hero.layers.forEach((l, i) => {
+    l.style.borderRadius = `${r}px`;
+    l.style.background = rgba(mix(side, BLACK, i / HN * 0.6));
+  });
+  hero.faces.forEach(f => f.style.borderRadius = `${r}px`);
+
+  // front face: fn -> Grammarly (wipe from the left) -> Wispr Flow creeping in from the right
+  const fillR = 380 * E.inOutCubic(prog(t, T.fillA, T.fillAEnd));
+  hero.fillA.style.clipPath = `circle(${fillR}px at -40px 150px)`;
+  hero.fillB.style.clipPath = `circle(${intrusion(t)}px at 340px 150px)`;
+  const mA = prog(t, T.fillA + 0.3, T.fillA + 0.75);
+  hero.markA.style.opacity = clamp(mA * 3);
+  hero.markA.style.transform = `scale(${lerp(0.3, 1, E.outBack(mA, 2.2))}) rotate(${lerp(-35, 0, E.outCubic(mA))}deg)`;
+  const gOut = E.inOutCubic(prog(t, T.fillA + 0.05, T.fillA + 0.35));
+  hero.globe.style.opacity = 1 - gOut;
+  hero.globe.style.transform = `translate(${-20 * gOut}px, ${20 * gOut}px) scale(${1 - .4 * gOut})`;
+  // carry the keyboard fn key's glow + white labels across the handoff, then let them fade
+  const carry = 1 - E.inOutCubic(prog(t, T.lift, T.lift + 0.6));
+  const labelCol = rgba(mix([207, 210, 217], WHITE, Math.max(carry, ownA)));
+  hero.fnTxt.style.color = labelCol;
+  hero.globe.style.color = labelCol;
+  hero.faces[1].style.boxShadow = carry > 0
+    ? `0 0 0 ${3.75 * carry}px rgba(255,255,255,${.75 * carry}), 0 0 ${70 * carry}px rgba(190,205,255,${.55 * carry})` : 'none';
+  hero.frontGloss.style.opacity = 1 - carry;
+  const sh1 = prog(t, T.fillAEnd + 0.1, T.fillAEnd + 0.7), sh2 = prog(t, T.flipB, T.flipB + 0.6);
+  hero.sheens[1].style.transform = `translateX(${lerp(-120, 420, E.inOutSine(sh1))}px) skewX(-18deg)`;
+  hero.sheens[0].style.transform = `translateX(${lerp(-120, 420, E.inOutSine(sh2))}px) skewX(-18deg)`;
+
+  const shadowS = sc * (1 + z / 1700);
+  Object.assign($('#heroShadow').style, {
+    left: `${cx - HS / 2 + jx}px`, top: `${cy - HS / 2 + 26 + z * 0.12}px`,
+    transform: `scale(${shadowS})`, borderRadius: `${r}px`,
+    filter: `blur(${30 + z * 0.12}px)`, opacity: .75 * Math.min(1, lift * 1.5),
+  });
+
+  /* ---- ambient glow ---- */
+  const tugMix = (t > T.bursts[0] && t < T.flipA + 0.6) ? intrusion(t) / 300 * 0.8 : 0;
+  const amb = mix(mix(NEUTRAL, CA, ownA), CB, Math.max(tugMix, ownB));
+  let ambA = .16 * E.outCubic(prog(t, 0, 1)) + .3 * Math.max(ownA, ownB);
+  for (const rr of RINGS) if (t > rr.t) ambA += .2 * rr.k * Math.exp(-5 * (t - rr.t));
+  Object.assign($('#ambient').style, {
+    left: `${cx - 750}px`, top: `${cy - 750}px`,
+    background: `radial-gradient(circle, ${rgba(amb, Math.min(ambA, .85))} 0%, ${rgba(amb, 0)} 62%)`,
+  });
+
+  /* ---- badges ---- */
+  const inA = prog(t, T.badgeA, T.badgeA + 0.7), inB = prog(t, T.badgeB, T.badgeB + 0.7);
+  const exA = E.inOutCubic(prog(t, T.outA, T.outA + 0.6)), exB = E.inOutCubic(prog(t, T.outA + 0.15, T.outA + 0.75));
+  let lunge = 0;
+  for (const s of STRIKES) {
+    const p = prog(t, s.t - 0.15, s.t + 0.4);
+    lunge += p < 0.3 ? -18 * bell(p / 0.6) : 46 * s.k * bell((p - 0.3) / 0.7);
+  }
+  let pulseB = 0;
+  for (const b of T.bursts) pulseB += 0.08 * bell(prog(t, b - 0.05, b + 0.4));
+  const lost = E.inOutCubic(prog(t, T.flipB - 0.2, T.flipB + 0.3));
+  const bA = $('#badgeA'), bB = $('#badgeB');
+  bA.style.left = `${lerp(-420, 360, E.outBack(inA, 1.2)) - 150 + lunge - 70 * exA}px`;
+  bA.style.opacity = clamp(inA * 2) * (1 - exA) * (1 - .45 * lost);
+  bA.style.transform = `scale(${1 - .08 * lost})`;
+  bA.style.filter = lost > 0 ? `grayscale(${.7 * lost})` : 'none';
+  bB.style.left = `${lerp(2340, 1560, E.outBack(inB, 1.2)) - 150 + 70 * exB}px`;
+  bB.style.opacity = clamp(inB * 2) * (1 - exB);
+  bB.style.transform = `scale(${1 + pulseB + .06 * wobble(t - T.flipB, 12, 5)})`;
+  for (const [b, p] of [[bA, inA], [bB, inB]]) {
+    const n = b.querySelector('.name'), q = E.outCubic(prog(p, .35, 1));
+    n.style.opacity = q; n.style.transform = `translateY(${16 * (1 - q)}px)`;
+  }
+  let haloA = .35 * ownA * (1 - ownB), haloB = .2 * clamp(inB * 2) + .45 * ownB;
+  for (const s of STRIKES) haloA += .6 * bell(prog(t, s.t - .1, s.t + .45));
+  for (const b of T.bursts) haloB += .6 * bell(prog(t, b - .1, b + .5));
+  bA.querySelector('.halo').style.opacity = clamp(haloA);
+  bB.querySelector('.halo').style.opacity = clamp(haloB);
+
+  /* ---- Grammarly streaks ---- */
+  const xs = 360 + 84 + 18, xe = cx - HS / 2 - 4;
+  const strike = STRIKES.find(s => t >= s.t - 0.01 && t < s.t + 0.5);
+  for (const row of STREAK_ROWS) {
+    if (!strike) { row.el.style.display = 'none'; continue; }
+    const a = strike.t + row.d;
+    const head = lerp(xs, xe, E.inCubic(prog(t, a, a + 0.2)));
+    const tail = lerp(xs, xe, E.inOutCubic(prog(t, a + 0.06, a + 0.3)));
+    const h = row.h * strike.k;
+    Object.assign(row.el.style, {
+      display: head - tail > 1 ? '' : 'none',
+      left: `${tail}px`, width: `${head - tail}px`, top: `${540 + row.y * strike.k - h / 2}px`, height: `${h}px`,
+      background: `linear-gradient(90deg, ${rgba(CA, 0)}, ${rgba(CA, .95)} 75%, #fff)`,
+      boxShadow: `0 0 ${18 * strike.k}px ${rgba(CA, .9)}`,
+    });
+  }
+
+  /* ---- Wispr Flow voice waves ---- */
+  const x0 = 1560 - 84 - 18, x1 = cx + HS / 2 + 4 + jx;
+  const burst = T.bursts.find(b => t >= b && t < b + 0.65);
+  for (const w of WAVE_LINES) {
+    if (burst === undefined) { w.el.setAttribute('d', ''); continue; }
+    const reveal = E.outCubic(prog(t, burst, burst + 0.3));
+    const op = E.outCubic(prog(t, burst, burst + 0.08)) * (1 - E.inCubic(prog(t, burst + 0.32, burst + 0.62)));
+    const xHead = lerp(x0, x1, reveal);
+    let d = '';
+    for (let x = x0; x >= xHead - 0.1; x -= 4) {
+      const u = (x0 - x) / (x0 - x1);
+      const env = Math.pow(bell(u), 0.7) * clamp((x - xHead) / 50 + (reveal >= 1 ? 1 : 0));
+      const y = 540 + w.y + w.amp * env * Math.sin(w.k * x + t * 2 * Math.PI * 5 + w.ph);
+      d += `${d ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`;
+    }
+    w.el.setAttribute('d', d);
+    w.el.setAttribute('opacity', op);
+  }
+
+  /* ---- shockwave rings ---- */
+  for (const rr of RINGS) {
+    const p = (t - rr.t) / 0.75;
+    if (p < 0 || p > 1) { rr.el.style.display = 'none'; continue; }
+    const s = lerp(1.0, 1.0 + 0.9 * rr.k, E.outCubic(p));
+    Object.assign(rr.el.style, {
+      display: '', left: `${cx - HS / 2 + jx}px`, top: `${cy - HS / 2 + jy}px`,
+      transform: `scale(${s})`, opacity: Math.pow(1 - p, 2) * rr.k,
+      borderWidth: `${lerp(6, 1.5, p)}px`, borderColor: rgba(rr.c), borderRadius: `${r + 6}px`,
+      boxShadow: `0 0 30px ${rgba(rr.c, .6)}, inset 0 0 30px ${rgba(rr.c, .4)}`,
+    });
+  }
+
+  /* ---- end card ---- */
+  const pill = $('#pill');
+  const pp = prog(t, T.press + 0.05, T.press + 0.45);
+  pill.style.display = CONFIG.dictationPill && pp > 0 ? '' : 'none';
+  pill.style.opacity = clamp(pp * 2);
+  pill.style.transform = `translateY(${16 * (1 - E.outCubic(pp))}px) scale(${lerp(.7, 1, E.outBack(pp, 1.8))})`;
+  [...pill.children].forEach((bar, i) => {
+    const env = E.outCubic(prog(t, T.press + 0.2 + i * 0.02, T.press + 0.6 + i * 0.02));
+    const v = (0.3 + 0.7 * Math.abs(Math.sin(t * 7.3 + i * 1.7) * Math.sin(t * 4.1 + i * 0.9 + 1))) * (0.35 + 0.65 * bell((i + 0.5) / PILL_BARS));
+    bar.style.height = `${6 + 32 * env * v}px`;
+    bar.style.background = rgba(mix(WHITE, mix(CB, WHITE, .35), i / (PILL_BARS - 1)));
+  });
+
+  const words = [...document.querySelectorAll('#title .w')];
+  words.forEach((w, i) => {
+    const q = E.outCubic(prog(t, T.titleA + i * 0.07, T.titleA + i * 0.07 + 0.6));
+    w.style.opacity = q;
+    w.style.transform = `translateY(${36 * (1 - q)}px)`;
+    w.style.filter = q < 1 ? `blur(${8 * (1 - q)}px)` : 'none';
+  });
+  const sub = E.outCubic(prog(t, T.titleA + 0.5, T.titleA + 1.1));
+  $('#title p').style.opacity = sub;
+  $('#title p').style.transform = `translateY(${20 * (1 - sub)}px)`;
+
+  /* ---- film ---- */
+  const gf = Math.floor(t * 24);
+  $('#grain').style.transform = `translate(${(gf * 73) % 100}px, ${(gf * 41) % 100}px)`;
+  $('#fade').style.opacity = 1 - E.outCubic(prog(t, 0, 0.4));
+}
+
+/* ---------------- boot ---------------- */
+buildKeyboard(); buildHero(); buildFx(); buildText();
+const RENDER = new URLSearchParams(location.search).has('render');
+if (RENDER) document.body.classList.add('render');
+
+window.DURATION = CONFIG.duration;
+window.renderAt = renderAt;
+window.ready = Promise.all([
+  document.fonts.ready,
+  ...[...document.images].map(img => img.decode().catch(() => {})),
+]);
+
+if (!RENDER) {
+  const stage = $('#stage'), scrub = $('#scrub'), btn = $('#play'), clock = $('#clock');
+  const fit = () => {
+    const vp = $('#viewport').getBoundingClientRect();
+    stage.style.transform = `scale(${Math.min((vp.width - 32) / 1920, (vp.height - 32) / 1080)})`;
+  };
+  addEventListener('resize', fit); fit();
+  scrub.max = CONFIG.duration;
+  let t = 0, playing = true, last = performance.now();
+  const show = () => { renderAt(t); scrub.value = t; clock.textContent = `${t.toFixed(2)}s / ${CONFIG.duration}s`; };
+  const toggle = () => { playing = !playing; btn.textContent = playing ? 'Pause' : 'Play'; last = performance.now(); };
+  btn.onclick = toggle;
+  scrub.oninput = () => { t = +scrub.value; if (playing) toggle(); show(); };
+  addEventListener('keydown', e => {
+    if (e.code === 'Space') { e.preventDefault(); toggle(); }
+    if (e.code === 'ArrowRight') { t = Math.min(CONFIG.duration, t + 1 / 30); show(); }
+    if (e.code === 'ArrowLeft') { t = Math.max(0, t - 1 / 30); show(); }
+  });
+  (function loop(now) {
+    if (playing) { t += (now - last) / 1000; if (t > CONFIG.duration) t = 0; show(); }
+    last = now;
+    requestAnimationFrame(loop);
+  })(performance.now());
+}
+</script>
+</body>
+</html>
