@@ -1,60 +1,48 @@
-# Uno Reverse: Granola Evicts Wispr Flow from the fn Key
+# Two Apps, One fn Key
 
-**Script v2, for review**
+**Script v3, for review**
 
-- **Format:** 9:16 vertical (1080×1920), about 21 seconds, built for Instagram Reels. A 16:9 version is possible.
-- **Style:** flat 2D cartoon with thick outlines, squash-and-stretch and impact frames. Each character is its logo with big eyes and bendy arms and legs.
-- **Text:** no voiceover. Big captions carry the jokes, because most Reels are watched muted.
+- **Format:** 16:9 (1920×1080) for X, about 20 seconds, 100% English.
+- **Captions:** burned in, because X autoplays muted.
+- **Reference:** the Instagram reel shared in chat, which I haven't seen yet. Once it's uploaded I'll adjust the layout and pacing to match it.
 
----
+## Setting
 
-## The real story the jokes come from
+We look straight at a Mac desktop that fills the frame, which suits 16:9 naturally.
 
-| Joke in the video | What actually happened |
-|---|---|
-| Wispr owns the `fn` key | Wispr Flow's dictation is hold `fn` and talk. |
-| Wispr wears a notepad that looks a lot like Granola's | Wispr Flow launched a "Granola-styled" meeting notetaker. |
-| Granola plays an UNO reverse card | On Oct 29, 2026, Granola launched Mac dictation on the `fn` key. TechCrunch called it an "Uno reverse". |
-| Coupon battle | Wispr offers Granola users up to a year free to switch. Granola's dictation is free with unlimited words. |
-| An email titled "How to turn off Granola" | Users shared emails from Wispr explaining how to turn off Granola's voice typing. |
-| CRUNCH | TechCrunch's headline: "Granola *crunches up* a dictation feature…" |
+- **Middle of the screen:** an email window, open with an empty draft.
+- **ME:** never seen. My lines appear as captions at the bottom center.
+- **GRANOLA, bottom left:** its logo turned into a character, in acid lime with a wobbly hand-drawn outline. Calm and deadpan, always munching granola.
+- **WISPR FLOW, bottom right:** its logo turned into a character. Fast-talking and a little desperate.
+- Each character pops out of its own waveform bar. Both apps really do show one while you hold `fn`.
+- Their speech bubbles sit on their own side of the screen, so each line reads as a back-and-forth across the frame.
 
----
+## Script
 
-## Characters
+| # | Time | What happens | Line |
+|---|---|---|---|
+| 1 | 0:00 – 0:02 | A finger holds down the `fn` key at the bottom of the screen. | **ME:** "Write an email to my boss. I'm running late." |
+| 2 | 0:02 – 0:03.5 | Two waveform bars pop up at the same time and **bonk** into each other. Both characters spring out. | **WISPR FLOW:** "On it!"<br>**GRANOLA:** "Got it." |
+| 3 | 0:03.5 – 0:05 | Both type into the email at once, so the text doubles up. | Email: "Hi Hi Mark Mark, I'm I'm running running…" |
+| 4 | 0:05 – 0:06.5 | Beat. The cursor blinks. | **ME:** "…why are there two of you?" |
+| 5 | 0:06.5 – 0:08 | Wispr Flow puffs up its chest. | **WISPR FLOW:** "I've been your fn key since forever." |
+| 6 | 0:08 – 0:09.5 | Granola doesn't look up from its bowl. | **GRANOLA:** "I'm free. Unlimited words." |
+| 7 | 0:09.5 – 0:11 | Wispr Flow slaps a coupon on the screen. | **WISPR FLOW:** "I'll give you a YEAR free!" (fine print: "\*up to") |
+| 8 | 0:11 – 0:12.5 | Long pause, then a crunch. | **GRANOLA:** "…I'm already free." |
+| 9 | 0:12.5 – 0:14 | Wispr Flow, getting desperate, pulls on a notepad hat. | **WISPR FLOW:** "Okay, well, I take meeting notes now too." |
+| 10 | 0:14 – 0:15.5 | Granola slowly holds up an **UNO REVERSE** card. | — |
+| 11 | 0:15.5 – 0:17 | Both characters spin to face ME. | **ME:** "Can someone PLEASE just write the email." |
+| 12 | 0:17 – 0:19 | They race-type, and the email sends itself with a *whoosh*. | Email: "Hi Mark, running late. Also, fn is mine. – Granola<br>P.S. It's not. – Wispr" |
+| 13 | 0:19 – 0:21 | **Twist:** the boss's reply slides in as a notification. Both characters freeze and slowly look at each other. | **"…are you okay?"** |
 
-**WISPR FLOW**, the smooth-talking landlord of `fn`
-- Built from the Wispr Flow logo.
-- Talks so fast its speech bubbles overflow. Too cool for school: sunglasses and a drink with a tiny umbrella.
+## Where each joke comes from
 
-**GRANOLA**, calm, unbothered and crunchy
-- Built from the Granola logo: acid lime, with a hand-drawn outline that wobbles slightly all the time.
-- Never raises its voice. Always has a bowl of granola. It wins by being completely chill.
+- **Both apps default to `fn`:** Wispr Flow's dictation is hold `fn` and talk. Granola launched `fn`-key dictation on Oct 29, 2026. Wispr's help docs say the two can interfere.
+- **"Unlimited words":** Granola's dictation is free with unlimited words on every plan.
+- **"A year free":** Wispr offers Granola users up to a year free to switch.
+- **Meeting notes and the UNO reverse:** Wispr launched a Granola-styled notetaker first, then Granola added dictation, which TechCrunch called an "Uno reverse".
 
----
+## Still needed
 
-## Shot list
-
-| # | Time | What we see | Text on screen | Sound |
-|---|---|---|---|---|
-| 1 | 0:00 – 0:02 | **HOOK, a freeze frame.** Wispr Flow mid-air, flying out of frame, face squashed, with a lime footprint on it. | **"Yep, that's me. You're probably wondering how I got here."** | record scratch |
-| 2 | 0:02 – 0:05 | **Rewind**, with VHS lines and "◀◀ 1 day earlier". Wispr Flow lounges on the giant `fn` key like a throne, in sunglasses with a drink. It's wearing a notepad hat that looks *suspiciously* like Granola's. | "Wispr Flow. Landlord of the fn key."<br>Tag on the hat: **"meeting notes (100% original)"** | lounge music |
-| 3 | 0:05 – 0:08 | **Granola arrives.** It waddles in munching, stops, and stares at the notepad hat. Long pause. Then it slowly pulls out an **UNO REVERSE** card. | "Granola. Launched fn-key dictation yesterday." | crunch… crunch…, then a dramatic *DUN DUN* |
-| 4 | 0:08 – 0:10 | **Bribe, round 1.** Wispr panics and flicks a coupon at Granola. | Coupon: **"1 YEAR FREE\*"**, with fine print *"\*up to"* | *fwip* |
-| 5 | 0:10 – 0:12 | **Bribe, round 2.** Granola calmly unrolls a much bigger sign. Wispr's eye twitches. | Sign: **"FREE. UNLIMITED."** | paper unroll, one cricket |
-| 6 | 0:12 – 0:14 | **Bribe, round 3.** Wispr launches a paper-airplane email. Granola catches it, reads it, and eats it. | Email subject: **"How to turn off Granola"** | whoosh, then a big **CRUNCH** |
-| 7 | 0:14 – 0:17 | **The kick.** Granola puts down its bowl, winds up its noodle leg, and kicks Wispr off the key. This matches the opening freeze frame, closing the loop. | **"Yep, that's me."** (again) | wind-up, *BOINK*, record scratch |
-| 8 | 0:17 – 0:19 | **New landlord.** Granola sits on the `fn` key and puts on Wispr's sunglasses. The key turns lime with Granola's icon. It holds `fn` and its waveform pill appears. | Text types itself out: **"Note to self: fn is mine now."** | *ding*, soft chill beat |
-| 9 | 0:19 – 0:21 | **Twist.** A small notification slides into the corner. Granola slowly turns to camera with a deadpan stare. | Notification: **"📝 Wispr Flow is taking notes on this meeting."**<br>End card: **"The fn key war has begun."** | notification *pop*, beat drop |
-
----
-
-## Notes
-
-- **The hook shows the result first.** We open on the punchline, Wispr getting kicked, and the rest of the video explains it.
-- **The bribes escalate in threes:** coupon, then a bigger sign, then the email Granola eats.
-- **The twist lands in the last 2 seconds:** Wispr is secretly taking notes, which turns the notetaker joke back on Granola.
-- **Optional extra, adds about 2s:** a boxing-style "tale of the tape" after shot 2. **WISPR FLOW, $2B, "dictation… and now notes 👀"** versus **GRANOLA, $1.5B, "notes… and now dictation 👀"**.
-- **To fit about 15s:** cut shot 4 and go straight to the "FREE. UNLIMITED." sign.
-- **Sound effects** are suggestions for your editor. The rendered video is silent.
-- **Logos needed:** the official logo files for both brands (SVG is best).
+- **The reference reel:** upload the file to `wispr-vs-granola/reference/` or attach it in chat.
+- **Official logo files:** for both Granola and Wispr Flow, SVG preferred.
