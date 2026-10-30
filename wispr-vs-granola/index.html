@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fn Key Custody</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+  body { font-family: 'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif; }
+  #viewport { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #stage { position: relative; flex: none; width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+  body.render #stage { transform: none !important; }
+  #gl { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+  .fill { position: absolute; inset: 0; pointer-events: none; }
+  #vignette { background: radial-gradient(ellipse 80% 80% at 50% 45%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%); }
+  #grain { position: absolute; left: -100px; top: -100px; width: 2120px; height: 1280px; opacity: .16; mix-blend-mode: overlay; pointer-events: none; }
+  #caption { position: absolute; left: 0; right: 0; bottom: 84px; text-align: center; font-size: 58px; font-weight: 800;
+             letter-spacing: -0.5px; color: #fff; text-shadow: 0 3px 0 rgba(0,0,0,.35), 0 0 24px rgba(0,0,0,.45); }
+  #caption .on { color: #F5DF3C; }
+  #caption .who { display: block; font-size: 26px; font-weight: 700; letter-spacing: 2px; margin-bottom: 8px; opacity: .75; }
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <canvas id="gl" width="1920" height="1080"></canvas>
+    <div id="vignette" class="fill"></div>
+    <div id="caption"></div>
+    <div id="grain"></div>
+  </div>
+</div>
+
+<script type="importmap">{ "imports": { "three": "./node_modules/three/build/three.module.js" } }</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* =====================================================================
+   Brand placeholders — swap colours (and later the logo decals) once the
+   official assets are in ./assets.
+   ===================================================================== */
+const BRAND = {
+  granola: { body: '#C3E63A', glow: '#D8FF4A' },   // Granola acid lime
+  wispr:   { body: '#8C74F0', glow: '#B9A8FF' },   // placeholder — confirm Wispr Flow's colour
+};
+const DURATION = 12;
+
+/* ---------------- renderer / scene ---------------- */
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(1920, 1080, false);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#120d09');
+const camera = new THREE.PerspectiveCamera(32, 1920 / 1080, 0.1, 50);
+camera.position.set(0, 1.4, 5.6);
+camera.lookAt(0, 1.2, -0.4);
+
+/* ---------------- helpers ---------------- */
+const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: .88, metalness: 0, ...o });
+const glowMat = color => new THREE.MeshBasicMaterial({ color });
+function add(parent, geo, material, pos = [0, 0, 0], rot = [0, 0, 0], { cast = true, receive = true } = {}) {
+  const m = new THREE.Mesh(geo, material);
+  m.position.set(...pos); m.rotation.set(...rot);
+  m.castShadow = cast; m.receiveShadow = receive;
+  parent.add(m);
+  return m;
+}
+const box = (p, w, h, d, color, pos, rot, o) => add(p, new THREE.BoxGeometry(w, h, d), typeof color === 'string' ? mat(color) : color, pos, rot, o);
+const ico = (p, r, detail, color, pos, rot, o) => add(p, new THREE.IcosahedronGeometry(r, detail), typeof color === 'string' ? mat(color) : color, pos, rot, o);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+
+function radialTexture(inner = 'rgba(255,255,255,1)') {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'), grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grd.addColorStop(0, inner); grd.addColorStop(.25, 'rgba(255,255,255,.35)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+const GLOW_TEX = radialTexture();
+function glowSprite(parent, color, size, pos) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW_TEX, color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  s.scale.set(size, size, 1); s.position.set(...pos); parent.add(s);
+  return s;
+}
+function textTexture(draw, w = 512, h = 512) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
+
+/* ---------------- room ---------------- */
+const floor = add(scene, new THREE.PlaneGeometry(20, 12), mat('#231a13'), [0, 0, 0], [-Math.PI / 2, 0, 0], { cast: false });
+const wall = add(scene, new THREE.PlaneGeometry(20, 8), mat('#3a2d22'), [0, 4, -1.6], [0, 0, 0], { cast: false });
+
+// window with a night skyline (right)
+const win = new THREE.Group(); win.position.set(3.1, 2.15, -1.585); scene.add(win);
+box(win, 2.0, 2.5, 0.01, glowMat('#0d1735'), [0, 0, 0], [0, 0, 0], { cast: false, receive: false });
+const towers = [[-0.75, 0.5, 1.3], [-0.35, 0.36, 1.9], [0.05, 0.42, 1.05], [0.5, 0.5, 1.6], [0.85, 0.3, 2.2]];
+let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+for (const [x, w, h] of towers) {
+  box(win, w, h, 0.01, glowMat('#15224a'), [x, -1.25 + h / 2, 0.005], [0, 0, 0], { cast: false, receive: false });
+  for (let i = 0; i < 9; i++) if (rnd() > .45)
+    box(win, .035, .045, .005, glowMat(rnd() > .7 ? '#f0d77a' : '#cfd8ff'), [x - w / 2 + .06 + rnd() * (w - .12), -1.25 + .1 + rnd() * (h - .2), .012], [0, 0, 0], { cast: false, receive: false });
+}
+for (let i = 0; i < 26; i++)
+  box(win, .02, .02, .005, glowMat('#e8ecff'), [-0.95 + rnd() * 1.9, -0.1 + rnd() * 1.3, .008], [0, 0, 0], { cast: false, receive: false });
+for (const [w, h, x, y] of [[2.12, .07, 0, 1.28], [2.12, .07, 0, -1.28], [.07, 2.62, -1.03, 0], [.07, 2.62, 1.03, 0], [.04, 2.5, 0, 0]])
+  box(win, w, h, .06, '#241b14', [x, y, .03]);
+
+// EO poster (left)
+const posterTex = textTexture((g, w, h) => {
+  g.fillStyle = '#E3CF4B'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#17130e'; g.font = '900 230px Inter, Arial'; g.textBaseline = 'middle'; g.fillText('EO', 44, 190);
+  g.font = '700 30px Inter, Arial'; g.fillText('THE fn KEY ISSUE', 48, 600); g.fillText('BY  EO', 330, 660);
+}, 512, 700);
+add(scene, new THREE.PlaneGeometry(1.1, 1.5), new THREE.MeshStandardMaterial({ map: posterTex, roughness: 1 }), [-1.55, 2.55, -1.58], [0, 0, 0], { cast: false });
+
+// couch
+const COUCH = '#2b231c';
+box(scene, 3.8, 0.95, 0.35, COUCH, [0, 0.9, -1.25]);
+box(scene, 3.8, 0.42, 0.95, COUCH, [0, 0.21, -0.85]);
+box(scene, 3.6, 0.14, 0.85, '#32291f', [0, 0.49, -0.8]);
+box(scene, 0.3, 0.75, 0.95, COUCH, [-1.95, 0.37, -0.85]);
+box(scene, 0.3, 0.75, 0.95, COUCH, [1.95, 0.37, -0.85]);
+
+// coffee table (foreground) + props
+box(scene, 3.4, 0.08, 1.0, '#2a2119', [0, 0.46, 1.05]);
+for (const x of [-1.55, 1.55]) for (const z of [0.65, 1.45]) box(scene, 0.07, 0.44, 0.07, '#211a13', [x, 0.22, z]);
+add(scene, new THREE.CylinderGeometry(0.085, 0.07, 0.2, 9), mat('#e9e2d4'), [-0.75, 0.6, 0.95]);
+ico(scene, 0.12, 0, '#5fa86a', [1.15, 0.62, 1.0]);
+box(scene, 0.22, 0.012, 0.13, '#0b0b0d', [0.45, 0.506, 1.05], [0, 0.2, 0]);
+
+/* ---------------- ME (the user) ---------------- */
+const SKIN = '#a85c36', HOODIE = '#6cbf6a', PANTS = '#3a2f27';
+const me = new THREE.Group(); me.position.set(0, 0, -0.62); scene.add(me);
+box(me, 0.66, 0.72, 0.38, HOODIE, [0, 0.93, 0]);                               // torso
+box(me, 0.03, 0.22, 0.02, '#c9b08a', [-0.07, 1.06, 0.2]); box(me, 0.03, 0.22, 0.02, '#c9b08a', [0.07, 1.06, 0.2]);
+box(me, 0.6, 0.12, 0.42, HOODIE, [0, 1.3, -0.02]);                             // hood collar
+box(me, 0.14, 0.1, 0.14, SKIN, [0, 1.38, 0]);                                  // neck
+const head = new THREE.Group(); head.position.set(0, 1.62, 0.02); me.add(head);
+ico(head, 0.27, 1, SKIN, [0, 0, 0]);
+add(head, new THREE.SphereGeometry(0.29, 8, 5, 0, Math.PI * 2, 0, Math.PI / 2), mat('#16130f'), [0, 0.03, -0.01], [-0.12, 0, 0]);  // beanie
+const pupils = [];
+for (const s of [-1, 1]) {
+  ico(head, 0.055, 1, '#f4f1ea', [s * 0.1, 0.0, 0.235]);
+  pupils.push(ico(head, 0.027, 1, '#0d0d0d', [s * 0.1, 0.0, 0.285]));
+}
+const meMouth = box(head, 0.11, 0.018, 0.02, '#2a140c', [0, -0.12, 0.25]);
+// arms reaching to the laptop
+for (const s of [-1, 1]) {
+  box(me, 0.17, 0.42, 0.17, HOODIE, [s * 0.42, 1.02, 0.02], [0.25, 0, s * 0.18]);
+  box(me, 0.16, 0.16, 0.44, HOODIE, [s * 0.38, 0.8, 0.28], [0, s * -0.2, 0]);
+  ico(me, 0.08, 0, SKIN, [s * 0.3, 0.8, 0.52]);
+}
+// legs
+for (const s of [-1, 1]) {
+  box(me, 0.24, 0.2, 0.62, PANTS, [s * 0.17, 0.6, 0.27]);
+  box(me, 0.22, 0.5, 0.22, PANTS, [s * 0.17, 0.3, 0.55]);
+}
+// laptop
+box(me, 0.6, 0.03, 0.4, '#7a7064', [0, 0.73, 0.4]);
+const lid = box(me, 0.6, 0.4, 0.025, '#9fd2ec', [0, 0.93, 0.21], [-0.12, 0, 0]);
+
+/* ---------------- AI characters ---------------- */
+function makeBot({ color, glow, mouthKind }) {
+  const g = new THREE.Group();
+  const R = 0.42;
+  ico(g, R, 1, color, [0, 0, 0]);
+  // black screen face (a faceted cap on the front of the head)
+  add(g, new THREE.SphereGeometry(R * 1.035, 18, 12, Math.PI / 2 - 0.78, 1.56, Math.PI / 2 - 0.58, 1.08),
+      new THREE.MeshStandardMaterial({ color: '#0a0a0b', roughness: .75 }), [0, 0.02, 0]);
+  const onFace = (x, y) => Math.sqrt(R * R * 1.07 * 1.07 - x * x - y * y);
+  const eyes = [], eyeGlows = [];
+  for (const s of [-1, 1]) {
+    eyes.push(box(g, 0.085, 0.07, 0.02, glowMat('#ffffff'), [s * 0.13, 0.07, onFace(s * 0.13, 0.07)], [-0.12, s * 0.3, 0], { cast: false }));
+    eyeGlows.push(glowSprite(g, '#ffffff', 0.32, [s * 0.13, 0.07, onFace(s * 0.13, 0.07) + 0.02]));
+  }
+  const mouth = [];
+  const n = mouthKind === 'wave' ? 9 : 7;
+  for (let i = 0; i < n; i++) {
+    const x = (i - (n - 1) / 2) * (mouthKind === 'wave' ? 0.032 : 0.036);
+    mouth.push(box(g, mouthKind === 'wave' ? 0.016 : 0.024, 0.016, 0.012, glowMat(glow), [x, -0.12, onFace(x, -0.12)], [0.25, x * 0.8, 0], { cast: false }));
+  }
+  return { g, eyes, eyeGlows, mouth, kind: mouthKind, R };
+}
+
+// GRANOLA — lime, crowned with oat clusters, a spoon antenna and a little notepad
+const granola = makeBot({ color: BRAND.granola.body, glow: BRAND.granola.glow, mouthKind: 'pixel' });
+granola.g.position.set(-1.95, 1.72, -0.25); granola.g.rotation.y = 0.38; scene.add(granola.g);
+{
+  const oats = ['#d8b578', '#b98a4e', '#e6cc96', '#9b6d3c'];
+  for (let i = 0; i < 16; i++) {
+    const th = rnd() * 0.75, ph = rnd() * Math.PI * 2, r = 0.42;
+    ico(granola.g, 0.055 + rnd() * 0.04, 0, oats[i % 4],
+        [r * Math.sin(th) * Math.cos(ph), r * Math.cos(th) + 0.02, r * Math.sin(th) * Math.sin(ph) - 0.05], [rnd() * 3, rnd() * 3, 0]);
+  }
+  const spoon = new THREE.Group(); spoon.position.set(0.16, 0.42, -0.05); spoon.rotation.z = -0.35; granola.g.add(spoon);
+  box(spoon, 0.03, 0.34, 0.02, mat('#c9cdd2', { metalness: .6, roughness: .35 }), [0, 0.17, 0]);
+  add(spoon, new THREE.SphereGeometry(0.06, 7, 5), mat('#c9cdd2', { metalness: .6, roughness: .35 }), [0, 0.38, 0], [0, 0, 0]).scale.set(1, 1.35, 0.45);
+  const pad = new THREE.Group(); pad.position.set(0.5, -0.32, 0.18); pad.rotation.set(-0.3, -0.5, 0.2); granola.g.add(pad);
+  box(pad, 0.2, 0.26, 0.02, '#f2ede2', [0, 0, 0]);
+  box(pad, 0.2, 0.04, 0.03, BRAND.granola.body, [0, 0.13, 0]);
+  add(pad, new THREE.CylinderGeometry(0.012, 0.012, 0.24, 6), mat('#f0c93c'), [0.09, -0.02, 0.04], [0, 0, 0.6]);
+}
+
+// WISPR FLOW — headphones + mic boom (voice) and a stolen fn keycap for a hat
+const wispr = makeBot({ color: BRAND.wispr.body, glow: BRAND.wispr.glow, mouthKind: 'wave' });
+wispr.g.position.set(1.95, 1.78, -0.25); wispr.g.rotation.y = -0.38; scene.add(wispr.g);
+{
+  const DARK = '#1b1820';
+  add(wispr.g, new THREE.TorusGeometry(0.45, 0.03, 5, 14, Math.PI), mat(DARK), [0, 0.02, 0]);
+  for (const s of [-1, 1]) add(wispr.g, new THREE.CylinderGeometry(0.11, 0.11, 0.09, 8), mat(DARK), [s * 0.45, 0.0, 0], [0, 0, Math.PI / 2]);
+  add(wispr.g, new THREE.CylinderGeometry(0.012, 0.012, 0.36, 5), mat(DARK), [-0.33, -0.17, 0.2], [0.9, 0, -1.0]);
+  ico(wispr.g, 0.035, 0, '#2a2530', [-0.2, -0.24, 0.36]);
+  const fnTex = textTexture((g, w, h) => {
+    g.fillStyle = '#2c2d32'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e9eaee'; g.font = '600 150px Inter, Arial'; g.fillText('fn', 270, 190);
+  }, 512, 512);
+  const capMats = Array.from({ length: 6 }, (_, i) => i === 2 ? new THREE.MeshStandardMaterial({ map: fnTex, roughness: .6 }) : mat('#202125'));
+  add(wispr.g, new THREE.BoxGeometry(0.3, 0.12, 0.3), capMats, [-0.06, 0.55, 0.08], [0.35, 0.25, 0.22]);
+}
+
+/* ---------------- lights ---------------- */
+scene.add(new THREE.HemisphereLight('#9b8670', '#140f0a', 0.55));
+const key = new THREE.SpotLight('#ffd3a3', 3.2, 0, 0.62, 0.7, 0);
+key.position.set(-2.6, 4.3, 4.0); key.target.position.set(0, 1.2, -0.8);
+key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -0.0004; key.shadow.radius = 4;
+scene.add(key, key.target);
+const rim = new THREE.DirectionalLight('#7f95d8', 0.45); rim.position.set(4, 3, -1); scene.add(rim);
+const faceFill = new THREE.PointLight('#fff1d8', 0.6, 0, 0); faceFill.position.set(0.6, 1.8, 2.2); scene.add(faceFill);
+
+/* ---------------- film grain ---------------- */
+{
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d'), img = g.createImageData(256, 256);
+  let s = 11; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < img.data.length; i += 4) { const v = r() * 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+  g.putImageData(img, 0, 0);
+  document.getElementById('grain').style.backgroundImage = `url(${c.toDataURL()})`;
+}
+
+/* ---------------- timeline (style-frame test: one exchange) ---------------- */
+const LINES = [
+  { who: 'wispr',   from: 0.5, to: 3.0, text: "I'll give you a YEAR free!" },
+  { who: 'granola', from: 4.2, to: 6.8, text: "…I'm already free." },
+  { who: 'me',      from: 8.0, to: 10.5, text: "…why are there two of you?" },
+];
+const NAMES = { me: 'ME', wispr: 'WISPR FLOW', granola: 'GRANOLA' };
+
+function animateBot(bot, t, talking, mood, phase) {
+  bot.g.position.y = bot.baseY + 0.04 * Math.sin(t * 1.7 + phase);
+  bot.g.rotation.z = 0.03 * Math.sin(t * 1.1 + phase);
+  // eyes: open / deadpan (half-lidded) / shocked, with a blink every few seconds
+  const blink = ((t + phase) % 3.7) < 0.12 ? 0.15 : 1;
+  const h = (mood === 'deadpan' ? 0.25 : mood === 'shock' ? 1.35 : 1) * blink;
+  bot.eyes.forEach(e => e.scale.set(mood === 'shock' ? 1.15 : 1, h, 1));
+  bot.eyeGlows.forEach(s => s.material.opacity = 0.55 + 0.25 * h);
+  bot.mouth.forEach((m, i) => {
+    const v = talking ? Math.abs(Math.sin(t * 16 + i * 1.3) * Math.sin(t * 7 + i * 0.7)) : 0;
+    m.scale.y = bot.kind === 'wave' ? 1 + v * 5.5 : 1 + v * 2.5;
+    m.visible = bot.kind === 'wave' || talking || i % 2 === 0 || true;
+  });
+}
+granola.baseY = granola.g.position.y; wispr.baseY = wispr.g.position.y;
+
+function renderAt(t) {
+  const line = LINES.find(l => t >= l.from && t < l.to);
+  const speaker = line?.who;
+  animateBot(granola, t, speaker === 'granola', 'deadpan', 0.0);
+  animateBot(wispr, t, speaker === 'wispr', t > 6.8 && t < 8 ? 'shock' : 'open', 1.3);
+
+  // ME: look at whoever is talking, tiny nod, mouth flaps when speaking
+  const lookX = speaker === 'granola' ? -1 : speaker === 'wispr' ? 1 : 0;
+  pupils.forEach(p => { p.position.x = (p.position.x > 0 ? 0.1 : -0.1) + lookX * 0.022; });
+  head.rotation.y = lookX * 0.18;
+  head.rotation.x = 0.03 * Math.sin(t * 1.3);
+  meMouth.scale.y = speaker === 'me' ? 1 + 3 * Math.abs(Math.sin(t * 14)) : 1;
+
+  // caption with karaoke-style word highlight
+  const cap = document.getElementById('caption');
+  if (line) {
+    const words = line.text.split(' ');
+    const k = Math.min(words.length - 1, Math.floor((t - line.from) / ((line.to - line.from) * 0.8) * words.length));
+    cap.innerHTML = `<span class="who">${NAMES[line.who]}</span>` + words.map((w, i) => `<span class="${i === k ? 'on' : ''}">${w}</span>`).join(' ');
+  } else cap.innerHTML = '';
+
+  const gf = Math.floor(t * 24);
+  document.getElementById('grain').style.transform = `translate(${(gf * 73) % 100}px, ${(gf * 41) % 100}px)`;
+  renderer.render(scene, camera);
+}
+
+/* ---------------- boot ---------------- */
+const RENDER = new URLSearchParams(location.search).has('render');
+if (RENDER) document.body.classList.add('render');
+window.DURATION = DURATION;
+window.renderAt = renderAt;
+window.ready = document.fonts.ready.then(() => { posterTex.needsUpdate = true; renderAt(0); });
+
+if (!RENDER) {
+  const stage = document.getElementById('stage');
+  const fit = () => stage.style.transform = `scale(${Math.min(innerWidth / 1920, innerHeight / 1080)})`;
+  addEventListener('resize', fit); fit();
+  const t0 = performance.now();
+  (function loop(now) { renderAt(((now - t0) / 1000) % DURATION); requestAnimationFrame(loop); })(t0);
+}
+</script>
+</body>
+</html>

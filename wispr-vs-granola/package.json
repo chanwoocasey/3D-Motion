@@ -1,0 +1,16 @@
+{
+  "name": "wispr-vs-granola",
+  "private": true,
+  "description": "Low-poly 3D comedy short: a user, Wispr Flow and Granola argue over the fn key",
+  "scripts": {
+    "dev": "node server.js",
+    "render": "node render.js",
+    "stills": "node render.js --stills 2,6,12"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}
