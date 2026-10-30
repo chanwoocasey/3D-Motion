@@ -1,26 +1,35 @@
-# Wispr Flow vs Granola: The fn Key Brawl
+# Uno Reverse: Granola Evicts Wispr Flow from the fn Key
 
-**Script v1, for review**
+**Script v2, for review**
 
-- **Format:** 16:9, 1920×1080, about 16 seconds. No voiceover; jokes come through speech bubbles, captions and sound effects.
-- **Look:** flat 2D cartoon. Each character is its logo with big eyes and bendy "noodle" arms and legs. The `fn` key from the first video is the prize everyone fights over.
+- **Format:** 9:16 vertical (1080×1920), about 21 seconds, built for Instagram Reels. A 16:9 version is possible.
+- **Style:** flat 2D cartoon with thick outlines, squash-and-stretch and impact frames. Each character is its logo with big eyes and bendy arms and legs.
+- **Text:** no voiceover. Big captions carry the jokes, because most Reels are watched muted.
+
+---
+
+## The real story the jokes come from
+
+| Joke in the video | What actually happened |
+|---|---|
+| Wispr owns the `fn` key | Wispr Flow's dictation is hold `fn` and talk. |
+| Wispr wears a notepad that looks a lot like Granola's | Wispr Flow launched a "Granola-styled" meeting notetaker. |
+| Granola plays an UNO reverse card | On Oct 29, 2026, Granola launched Mac dictation on the `fn` key. TechCrunch called it an "Uno reverse". |
+| Coupon battle | Wispr offers Granola users up to a year free to switch. Granola's dictation is free with unlimited words. |
+| An email titled "How to turn off Granola" | Users shared emails from Wispr explaining how to turn off Granola's voice typing. |
+| CRUNCH | TechCrunch's headline: "Granola *crunches up* a dictation feature…" |
 
 ---
 
 ## Characters
 
-**GRANOLA**, the unbothered note-taker
-- Body: the Granola logo (acid lime, hand-drawn). The outline wobbles slightly all the time, a nod to Granola's deliberately imperfect hand-drawn brand.
-- Personality: calm, cozy, slow to react, and never stops taking notes.
-- Props: a tiny notepad and pencil, and a bowl of granola.
+**WISPR FLOW**, the smooth-talking landlord of `fn`
+- Built from the Wispr Flow logo.
+- Talks so fast its speech bubbles overflow. Too cool for school: sunglasses and a drink with a tiny umbrella.
 
-**WISPR FLOW**, the fast talker
-- Body: the Wispr Flow logo, with the same eyes, arms and legs.
-- Personality: hyper and impatient. It talks so fast its words come out as a ribbon of sound waves, and it zips around trailing speed lines.
-- Superpower: hold `fn` and talk, and its voice becomes a physical blast.
-
-**THE fn KEY**, the prize
-- A glowing 3D keycap. Whoever is holding it gets the key turned their color, with their icon on it.
+**GRANOLA**, calm, unbothered and crunchy
+- Built from the Granola logo: acid lime, with a hand-drawn outline that wobbles slightly all the time.
+- Never raises its voice. Always has a bowl of granola. It wins by being completely chill.
 
 ---
 
@@ -28,36 +37,24 @@
 
 | # | Time | What we see | Text on screen | Sound |
 |---|---|---|---|---|
-| 1 | 0:00 – 0:01.5 | **Cold open.** An empty dark desk, with one `fn` key glowing under a spotlight. | — | soft *ting* |
-| 2 | 0:01.5 – 0:03.5 | **Granola arrives.** It waddles in from the left, munching granola. It spots the key, writes on a sticky note and slaps it on. The key turns lime with Granola's icon. Granola gives one small satisfied nod. | Sticky note: **"mine :)"** | *crunch crunch*, pencil scribble, *boop* |
-| 3 | 0:03.5 – 0:05.5 | **Wispr Flow arrives.** It zooms in from the right with speed lines and screeches to a stop in a puff of dust. Its speech bubble instantly fills with a wall of tiny text. | Bubble: *"excuse me excuse me EXCUSE ME that is MY key, hold fn and talk, that's literally my whole thing—"*<br>Caption: **"THAT'S MY KEY."** | whoosh, tire screech, sped-up chipmunk babble |
-| 4 | 0:05.5 – 0:07 | **The note gag.** Granola doesn't look up. Close-up on its notepad as it calmly writes. Wispr Flow's eye twitches. | Notepad: **"Meeting notes: Wispr is upset. • Talks fast. • Wants key."** | slow pencil scribble, one cricket |
-| 5 | 0:07 – 0:08 | **Standoff.** Split screen: an extreme close-up of each character's squinting eyes. A tumbleweed made of granola rolls between them. | — | western whistle |
-| 6 | 0:08 – 0:11.5 | **The brawl.** A classic cartoon fight cloud. Arms, legs, stars and comic words pop out of it, along with flying notepad pages and oats. The `fn` key keeps shooting out of the cloud and flipping between lime and Wispr's color each time someone grabs it. | **POW!** · **BLAH BLAH BLAH** · **CRUNCH** | brawl loop, cartoon bonks |
-| 7 | 0:11.5 – 0:13 | **The finisher.** The cloud clears. Wispr Flow is holding the `fn` key down. It takes a huge breath and *speaks*: a giant sound-wave blast sweeps Granola, and its sticky note, off screen. The key turns Wispr's color with its icon. Wispr dusts off its hands. | — | inhale, big *WHOOOSH*, *ding* |
-| 8 | 0:13 – 0:16 | **Ending (see options below).** | | |
-
----
-
-## Ending: pick one
-
-**A. Wispr Flow wins.** This is what you first described.
-Wispr Flow does a victory pose on top of the `fn` key while confetti made of sound waves falls. Title card: **"Hold fn. Win."**
-
-**B. Granola gets the last laugh.** This is my recommendation, because it's the funniest.
-Granola calmly walks back in, unbothered, and hands Wispr Flow a perfectly formatted page:
-> **Meeting summary:** You yelled.
-> **Action items:** 1. Get your own key.
-
-Wispr Flow freezes, then we hard cut to the title card: **"The fn key war."**
-
-**C. Truce.** Both characters pull on the key until it snaps in half. Granola walks off with the **f** and Wispr Flow with the **n**, each looking pleased. Title card: **"fn: it's complicated."**
+| 1 | 0:00 – 0:02 | **HOOK, a freeze frame.** Wispr Flow mid-air, flying out of frame, face squashed, with a lime footprint on it. | **"Yep, that's me. You're probably wondering how I got here."** | record scratch |
+| 2 | 0:02 – 0:05 | **Rewind**, with VHS lines and "◀◀ 1 day earlier". Wispr Flow lounges on the giant `fn` key like a throne, in sunglasses with a drink. It's wearing a notepad hat that looks *suspiciously* like Granola's. | "Wispr Flow. Landlord of the fn key."<br>Tag on the hat: **"meeting notes (100% original)"** | lounge music |
+| 3 | 0:05 – 0:08 | **Granola arrives.** It waddles in munching, stops, and stares at the notepad hat. Long pause. Then it slowly pulls out an **UNO REVERSE** card. | "Granola. Launched fn-key dictation yesterday." | crunch… crunch…, then a dramatic *DUN DUN* |
+| 4 | 0:08 – 0:10 | **Bribe, round 1.** Wispr panics and flicks a coupon at Granola. | Coupon: **"1 YEAR FREE\*"**, with fine print *"\*up to"* | *fwip* |
+| 5 | 0:10 – 0:12 | **Bribe, round 2.** Granola calmly unrolls a much bigger sign. Wispr's eye twitches. | Sign: **"FREE. UNLIMITED."** | paper unroll, one cricket |
+| 6 | 0:12 – 0:14 | **Bribe, round 3.** Wispr launches a paper-airplane email. Granola catches it, reads it, and eats it. | Email subject: **"How to turn off Granola"** | whoosh, then a big **CRUNCH** |
+| 7 | 0:14 – 0:17 | **The kick.** Granola puts down its bowl, winds up its noodle leg, and kicks Wispr off the key. This matches the opening freeze frame, closing the loop. | **"Yep, that's me."** (again) | wind-up, *BOINK*, record scratch |
+| 8 | 0:17 – 0:19 | **New landlord.** Granola sits on the `fn` key and puts on Wispr's sunglasses. The key turns lime with Granola's icon. It holds `fn` and its waveform pill appears. | Text types itself out: **"Note to self: fn is mine now."** | *ding*, soft chill beat |
+| 9 | 0:19 – 0:21 | **Twist.** A small notification slides into the corner. Granola slowly turns to camera with a deadpan stare. | Notification: **"📝 Wispr Flow is taking notes on this meeting."**<br>End card: **"The fn key war has begun."** | notification *pop*, beat drop |
 
 ---
 
 ## Notes
 
-- **Too long?** To get down to about 13s, cut shot 5 (the standoff) and shorten shot 3.
-- **Why a fight cloud?** It hides the actual punches. That keeps the characters simple to animate, and it's the funnier classic anyway.
-- **Sound effects:** these are suggestions for your editor. The rendered video will be silent unless you send sound files.
-- **Logos needed:** the official logo files for both brands (SVG is best). Each character's body is built from its logo.
+- **The hook shows the result first.** We open on the punchline, Wispr getting kicked, and the rest of the video explains it.
+- **The bribes escalate in threes:** coupon, then a bigger sign, then the email Granola eats.
+- **The twist lands in the last 2 seconds:** Wispr is secretly taking notes, which turns the notetaker joke back on Granola.
+- **Optional extra, adds about 2s:** a boxing-style "tale of the tape" after shot 2. **WISPR FLOW, $2B, "dictation… and now notes 👀"** versus **GRANOLA, $1.5B, "notes… and now dictation 👀"**.
+- **To fit about 15s:** cut shot 4 and go straight to the "FREE. UNLIMITED." sign.
+- **Sound effects** are suggestions for your editor. The rendered video is silent.
+- **Logos needed:** the official logo files for both brands (SVG is best).
